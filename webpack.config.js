@@ -5,6 +5,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const outputDirectory = 'dist';
 
 module.exports = {
+  devtool: "#source-map",
+  // debug: true,
   entry: ['babel-polyfill', './src/client/index.js'],
   output: {
     path: path.join(__dirname, outputDirectory),
@@ -29,6 +31,7 @@ module.exports = {
       }
     ]
   },
+  
   devServer: {
     port: 3000,
     open: true,
