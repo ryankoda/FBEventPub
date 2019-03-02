@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const Multer = require('multer');
+const dateFormat = require('dateformat');
 // const helmet = require('helmet');
 
 
@@ -161,6 +162,7 @@ app.get('/listEvents', (req, res) => {
       const events = results[0];
       events.forEach((event) => {
         const date = new Date(event.date);
+        const time = dateFormat(date, 'shortTime');
 
         eventList.push({
           title: event.title,
@@ -169,6 +171,7 @@ app.get('/listEvents', (req, res) => {
           lat: event.lat,
           lon: event.lon,
           date: date.toLocaleDateString('en-US'),
+          time,
           id: event[datastore.KEY].path[1],
           youtubeURL: event.youtubeURL
         });
