@@ -11,3 +11,14 @@ https://event-monkey.appspot.com/#/
 - Google Maps
 ###	Google Cloud Functions are used in conjunction with the cloud platform to execute the mentioned API’s when triggered by specific events.
 ###	The website’s dashboard provides the user with access to the list of events, a link to create new events, and the ability to delete current and past events.
+
+## Home Screen:
+![Home](https://github.com/ryankoda/FBEventPub/blob/master/images/sample1.png)
+## Sign In:
+![Sign In](https://github.com/ryankoda/FBEventPub/blob/master/images/sample2.png)
+## Create Event:
+![Create Event](https://github.com/ryankoda/FBEventPub/blob/master/images/sample3.png)
+## Upload YouTube Video:
+![Upload Video](https://github.com/ryankoda/FBEventPub/blob/master/images/sample4.png)
+## Dashboard:
+![Dashboard](https://github.com/ryankoda/FBEventPub/blob/master/images/sample5.png)
