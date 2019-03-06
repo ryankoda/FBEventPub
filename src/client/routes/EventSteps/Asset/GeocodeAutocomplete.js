@@ -1,114 +1,140 @@
-import React from 'react';
-import Snackbar from '@material-ui/core/Snackbar';
-import MUIPlacesAutocomplete, { geocodeBySuggestion } from 'mui-places-autocomplete';
-// import ChooseLocation from '../ChooseLocation';
+import React, { Component } from 'react';
+
+import {
+  GoogleApiWrapper, InfoWindow, Map, Marker
+} from 'google-maps-react';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import Grid from '@material-ui/core/Grid';
+import Input from '@material-ui/core/Input';
+import TextField from '@material-ui/core/TextField';
 import { saveLocalStorage } from '../../../../utils/localstorage';
 
-// Extended from demo geocode lat long in mui-places-autocomplete
-
-export class geocodeLatLong extends React.Component {
+class GoogleMapContainer extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      open: false,
-      coordinates: null,
-      errorMessage: null,
-      addressName: null,
-      viewport: null
+      position: null,
+      streetAddress: '',
+      coordinates: null
     };
-
-    this.onClose = this.onClose.bind(this);
-    this.onSuggestionSelected = this.onSuggestionSelected.bind(this);
   }
 
-  onClose() {
-    // Be sure to reset our coordinates/errorMessage so we can render the message displayed in the
-    // <Snackbar> appropriately (see 'renderMessage()').
-    this.setState({ open: false, coordinates: null, errorMessage: null });
+  componentDidMount() {
+    this.renderAutoComplete();
   }
 
-  onSuggestionSelected(suggestion) {
-    this.setState({addressName: suggestion.description});
-    // Once a suggestion has been selected by your consumer you can use the utility geocoding
-    // functions to get the latitude and longitude for the selected suggestion.
-    geocodeBySuggestion(suggestion).then((results) => {
-      if (results.length < 1) {
-        this.setState({
-          open: true,
-          errorMessage: 'Geocode request completed successfully but without any results',
-        });
+  componentDidUpdate(prevProps) {
+    if (this.props !== prevProps.map) this.renderAutoComplete();
+  }
 
-        return;
+  onSubmit(e) {
+    e.preventDefault();
+  }
+
+  sendLocation(addr, lat, lng) {
+    saveLocalStorage('address', addr);
+    saveLocalStorage('lat', lat);
+    saveLocalStorage('lon', lng);
+  }
+
+  omMapClick() {
+    this.sendLocation();
+  }
+
+  renderAutoComplete() {
+    const { google, map } = this.props;
+
+    if (!google || !map) return;
+
+    const autocomplete = new google.maps.places.Autocomplete(this.autocomplete);
+    autocomplete.bindTo('bounds', map);
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+
+      if (!place.geometry) return;
+
+      if (place.geometry.viewport) map.fitBounds(place.geometry.viewport);
+      else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(17);
       }
 
-      // Just use the first result in the list to get the geometry coordinates
-      const { geometry } = results[0];
+
+      // this.setState({ streetAddress: place.formatted_address });
+
+      // console.log(place.formatted_address);
+
+      this.setState({ position: place.geometry.location });
 
       const coordinates = {
-        lat: geometry.location.lat(),
-        lng: geometry.location.lng(),
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng()
       };
 
-      const viewport = {
-        northeast : {
-          lat: geometry.viewport.getNorthEast().lat(),
-          lng: geometry.viewport.getNorthEast().lng()
-        },
-        southwest : {
-          lat: geometry.viewport.getSouthWest().lat(),
-          lng: geometry.viewport.getSouthWest().lng()
-        }
-      };
+      // console.log(coordinates);
 
-      // Add your business logic here. In this case we simply set our state to show our <Snackbar>.
-      this.setState({ open: true, coordinates, viewport });
-    }).catch((err) => {
-      this.setState({ open: true, errorMessage: err.message });
+      this.setState({ coordinates: coordinates });
+
+      this.sendLocation(place.formatted_address, coordinates.lat, coordinates.lng);
     });
   }
 
-  renderMessage() {
-    const { addressName, coordinates, viewport, errorMessage } = this.state;
-
-    if (coordinates) {
-      this.props.locationLink(addressName, coordinates, viewport);
-      return `Selected ${addressName} 
-      at latitude ${coordinates.lat} 
-      and longitude ${coordinates.lng}  
-      between NE ${viewport.northeast.lat},${viewport.northeast.lng} 
-      and SW ${viewport.southwest.lat},${viewport.southwest.lng}`;
-    } if (errorMessage) {
-      return `Failed to geocode suggestion because: ${errorMessage}`;
-    }
-
-    // If we don't have any coordinates or error message to render (probably due to being rendered
-    // the first time) then render nothing
-    return null;
-  }
-
   render() {
-    const { open } = this.state;
+    const { position } = this.state;
+
+    const textareaStyle = {
+      padding: '5px',
+      margin: '5px',
+      resize: 'none'
+    };
 
     return (
-      <div>
-        <MUIPlacesAutocomplete
-          onSuggestionSelected={this.onSuggestionSelected}
-          renderTarget={() => (<div />)}
-        />
-        <Snackbar
-          onClose={this.onClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          autoHideDuration={5000}
-          open={open}
-          message={(<span>{this.renderMessage()}</span>)}
-          style={{ width: '70vw' }}
-        />
-      </div>
+      <React.Fragment>
+        <Grid container>
+          <Grid item>
+            <form onSubmit={this.onSubmit}>
+              <textarea
+                placeholder="Street Address"
+                ref={ref => (this.autocomplete = ref)}
+                type="text"
+                style={textareaStyle}
+              />
+            </form>
+          </Grid>
+          <Grid item>
+            <Typography>Latitude: {position && position.lat()}</Typography>
+            <Typography>Longitude: {position && position.lng()}</Typography>
+          </Grid>
+        </Grid>
+
+        <Grid>
+          <Map
+            {...this.props}
+            center={position}
+            centerAroundCurrentLocation={false}
+            containerStyle={{
+              position: 'relative',
+              width: '45vw',
+              height: '35vh'
+            }}
+          >
+            <Marker position={position} />
+          </Map>
+        </Grid>
+      </React.Fragment>
     );
   }
 }
 
-geocodeLatLong.description = 'Geocoding (i.e. latitude/longitude) a selected suggestion';
+const MapWrapper = props => (
+  <Map className="map" google={props.google} visible={false}>
+    <GoogleMapContainer {...props} />
+  </Map>
+);
 
-export default geocodeLatLong;
+export default GoogleApiWrapper({
+  apiKey: 'AIzaSyDBa0d3xAgLCHNHQSKyE8JCKhMzUzDBZkY'
+})(MapWrapper);
