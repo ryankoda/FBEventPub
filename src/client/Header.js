@@ -80,9 +80,6 @@ function Header(props) {
           View Dashboard
           <DashboardIcon className={classes.rightIcon} />
         </Button>
-        <Button variant="contained" color="primary" className={classes.button} component={NavLink} to="/view-playlist">
-          View Playlist
-        </Button>
       </nav>
   </header>
   );
