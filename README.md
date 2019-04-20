@@ -1,5 +1,4 @@
 # FBEventPub
-https://event-monkey.appspot.com/#/
 ###	Web app that initializes a payload with event info using API’s, stores it into a “serverless” NoSQL database (Google Cloud Datastore), and posts the event to Facebook.
 ###	Frontend UI written using React (NodeJS)
 - Express.js is used to communicate with the backend database
